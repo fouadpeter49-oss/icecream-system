@@ -1,0 +1,911 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Friday Ice Cream - Premium POS & ERP</title>
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- FontAwesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <!-- html2pdf.js for Document Exporting -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;800;900&display=swap');
+    * { font-family: 'Cairo', sans-serif; }
+    .glass-panel {
+      background: rgba(15, 23, 42, 0.90);
+      backdrop-filter: blur(20px);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+    }
+  </style>
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen selection:bg-indigo-500 selection:text-white">
+
+  <!-- 1. شاشة تسجيل الدخول -->
+  <div id="login-screen" class="min-h-screen flex items-center justify-center p-4 relative overflow-hidden">
+    <div class="glass-panel p-8 rounded-3xl w-full max-w-md shadow-2xl relative z-10 space-y-6 border border-slate-800">
+      <div class="text-center space-y-2">
+        <div class="inline-flex p-4 bg-gradient-to-tr from-indigo-600 via-purple-600 to-pink-500 rounded-2xl shadow-lg text-white mb-2">
+          <i class="fa-solid fa-ice-cream text-4xl"></i>
+        </div>
+        <h1 class="text-2xl font-black text-white">منظومة فراي داي الذكية</h1>
+        <p class="text-xs text-slate-400 font-semibold">نظام إدارة المبيعات والمخزون والجرد المتكامل</p>
+      </div>
+
+      <form onsubmit="handleLogin(event)" class="space-y-4">
+        <div>
+          <label class="text-xs font-bold text-slate-300 block mb-1">اسم المستخدم</label>
+          <input id="login-user" type="text" required class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-sm focus:border-indigo-500 outline-none" placeholder="owner / cashier1 / accountant">
+        </div>
+        <div>
+          <label class="text-xs font-bold text-slate-300 block mb-1">كلمة السر</label>
+          <input id="login-pass" type="password" required class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-sm focus:border-indigo-500 outline-none" placeholder="******">
+        </div>
+        <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-3 rounded-xl transition shadow-lg shadow-indigo-600/30">
+          تسجيل الدخول <i class="fa-solid fa-arrow-left mr-2"></i>
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- 2. التطبيق الرئيسي -->
+  <div id="app-screen" class="hidden min-h-screen flex flex-col">
+    <header class="glass-panel border-b border-slate-800 px-6 py-3.5 sticky top-0 z-50 flex justify-between items-center">
+      <div class="flex items-center gap-3">
+        <div class="p-2 bg-indigo-600 rounded-xl text-white">
+          <i class="fa-solid fa-ice-cream text-lg"></i>
+        </div>
+        <div>
+          <h2 class="font-black text-base text-white">FRIDAY <span class="text-indigo-400">POS & ERP</span></h2>
+          <p id="app-mode-title" class="text-[10px] text-slate-400">لوحة التحكم الذكية</p>
+        </div>
+      </div>
+
+      <div class="flex items-center gap-4">
+        <div class="text-left">
+          <div id="user-display-name" class="font-bold text-sm text-slate-200"></div>
+          <span id="role-badge" class="text-[10px] bg-indigo-500/20 text-indigo-300 px-2 py-0.5 rounded-md font-extrabold border border-indigo-500/30"></span>
+        </div>
+        <button id="btn-logout" onclick="logout()" class="bg-rose-500/10 hover:bg-rose-600 text-rose-400 hover:text-white border border-rose-500/20 px-3 py-1.5 rounded-xl text-xs font-bold transition">
+          <i class="fa-solid fa-right-from-bracket"></i> خروج
+        </button>
+      </div>
+    </header>
+
+    <main class="flex-1 p-6 max-w-7xl w-full mx-auto space-y-6">
+
+      <!-- ==================== [1. لوحة المالك OWNER PANEL] ==================== -->
+      <div id="owner-section" class="hidden space-y-6">
+        
+        <!-- إعدادات رقم الواتساب للأونر -->
+        <div class="glass-panel p-6 rounded-3xl border border-slate-800 space-y-4">
+          <h3 class="text-sm font-extrabold text-emerald-400 flex items-center gap-2">
+            <i class="fa-brands fa-whatsapp"></i> إعدادات رقم واتساب المالك (لاستقبال التقارير والتحذيرات)
+          </h3>
+          <div class="flex gap-3">
+            <input id="owner-whatsapp-input" type="text" placeholder="مثال: 201012345678" class="flex-1 bg-slate-900 border border-slate-700 rounded-xl p-2.5 text-sm outline-none text-emerald-300 font-bold">
+            <button onclick="saveOwnerWhatsApp()" class="bg-emerald-600 hover:bg-emerald-500 text-white font-bold px-6 py-2.5 rounded-xl text-xs transition">
+              حفظ الرقم
+            </button>
+          </div>
+        </div>
+
+        <!-- إدارة المستخدمين -->
+        <div class="glass-panel p-6 rounded-3xl border border-slate-800 space-y-4">
+          <h3 class="text-sm font-extrabold text-amber-400 flex items-center gap-2">
+            <i class="fa-solid fa-user-gear"></i> إدارة أطقم العمل (تغيير الأسماء وكلمات السر)
+          </h3>
+          <form onsubmit="updateUserAccount(event)" class="grid grid-cols-1 md:grid-cols-4 gap-3">
+            <select id="acc-target-role" class="bg-slate-900 border border-slate-700 rounded-xl p-2.5 text-xs outline-none">
+              <option value="Owner">المالك</option>
+              <option value="Cashier">الكاشير</option>
+              <option value="Accountant">المحاسب الذكي</option>
+            </select>
+            <input id="acc-new-name" type="text" required placeholder="الاسم الجديد" class="bg-slate-900 border border-slate-700 rounded-xl p-2.5 text-xs outline-none">
+            <input id="acc-new-pass" type="text" required placeholder="كلمة السر الجديدة" class="bg-slate-900 border border-slate-700 rounded-xl p-2.5 text-xs outline-none">
+            <button type="submit" class="bg-amber-600 hover:bg-amber-500 text-white font-bold py-2.5 rounded-xl text-xs transition">
+              حفظ وتحديث الحساب فوراً
+            </button>
+          </form>
+        </div>
+
+        <!-- الإحصائيات -->
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <div class="glass-panel p-5 rounded-2xl border border-slate-800">
+            <p class="text-slate-400 text-xs font-bold">إجمالي المبيعات</p>
+            <h3 id="stat-sales" class="text-2xl font-black text-indigo-400 mt-1">0 ج.م</h3>
+          </div>
+          <div class="glass-panel p-5 rounded-2xl border border-slate-800">
+            <p class="text-slate-400 text-xs font-bold">إجمالي القطع المباعة</p>
+            <h3 id="stat-sold-items" class="text-2xl font-black text-emerald-400 mt-1">0 قطعة</h3>
+          </div>
+          <div class="glass-panel p-5 rounded-2xl border border-slate-800">
+            <p class="text-slate-400 text-xs font-bold">ساعات الذروة 🔥</p>
+            <h3 id="stat-peak-hour" class="text-xs font-black text-amber-400 mt-1">جاري التحليل...</h3>
+          </div>
+          <div class="glass-panel p-5 rounded-2xl border border-slate-800">
+            <p class="text-slate-400 text-xs font-bold">الساعات الهادئة 💤</p>
+            <h3 id="stat-quiet-hour" class="text-xs font-black text-cyan-400 mt-1">جاري التحليل...</h3>
+          </div>
+        </div>
+
+        <!-- شاشة إضافة الحمولات والشحنات الشاملة -->
+        <div class="glass-panel p-6 rounded-3xl border border-slate-800 space-y-4">
+          <div class="flex justify-between items-center border-b border-slate-800 pb-3">
+            <h3 class="text-base font-extrabold text-white flex items-center gap-2">
+              <i class="fa-solid fa-truck-ramp-box text-emerald-400"></i> إضافة الحمولات والشحنات الواردة (لكل المنتجات)
+            </h3>
+            <span class="text-xs text-slate-400">حدد الكراتين لكل منتج وسيتم تحديث المخزن وإرسال تقارير PDF</span>
+          </div>
+
+          <div class="overflow-x-auto">
+            <table class="w-full text-right text-sm">
+              <thead class="text-xs text-slate-400 bg-slate-900 border-b border-slate-800">
+                <tr>
+                  <th class="p-3">المنتج</th>
+                  <th class="p-3">المخزن الحالي</th>
+                  <th class="p-3">عدد الكراتين</th>
+                  <th class="p-3">القطع في الكرتونة</th>
+                  <th class="p-3">الإجمالي الوارد</th>
+                </tr>
+              </thead>
+              <tbody id="shipment-matrix-table" class="divide-y divide-slate-800"></tbody>
+            </table>
+          </div>
+
+          <div class="text-left pt-2">
+            <button onclick="submitShipmentMatrix()" class="bg-emerald-600 hover:bg-emerald-500 text-white font-bold px-6 py-3 rounded-xl transition shadow-lg shadow-emerald-600/30 text-sm">
+              <i class="fa-solid fa-file-pdf ml-2"></i> اعتماد الشحنة وتصدير تقرير PDF للأونر
+            </button>
+          </div>
+        </div>
+
+        <!-- إدارة المخزون وإضافة المنتجات وتحديد الحد الأدنى -->
+        <div class="glass-panel p-6 rounded-3xl border border-slate-800 space-y-4">
+          <h3 class="text-base font-extrabold text-white flex items-center gap-2 border-b border-slate-800 pb-3">
+            <i class="fa-solid fa-boxes-packing text-indigo-400"></i> تعريف وتعديل المنتجات والحد الأدنى للتنبيه
+          </h3>
+          
+          <form onsubmit="handleSaveProduct(event)" class="grid grid-cols-1 md:grid-cols-3 gap-3">
+            <input id="prod-id" type="hidden">
+            <input id="prod-barcode" type="text" required placeholder="الباركود (مثال: 101)" class="bg-slate-900 border border-slate-700 rounded-xl p-2.5 text-sm outline-none">
+            <input id="prod-name" type="text" required placeholder="اسم المنتج" class="bg-slate-900 border border-slate-700 rounded-xl p-2.5 text-sm outline-none">
+            <input id="prod-image" type="url" placeholder="رابط صورة المنتج (URL)" class="bg-slate-900 border border-slate-700 rounded-xl p-2.5 text-sm outline-none">
+            <input id="prod-sell" type="number" required placeholder="سعر البيع للقطعة" class="bg-slate-900 border border-slate-700 rounded-xl p-2.5 text-sm outline-none">
+            <input id="prod-min-stock" type="number" min="0" value="10" required placeholder="الحد الأدنى للتنبيه (مثال: 10 قطع)" class="bg-slate-900 border border-slate-700 rounded-xl p-2.5 text-sm outline-none text-amber-400 font-bold">
+            
+            <div class="md:col-span-3 grid grid-cols-2 gap-2 bg-slate-900/80 p-2.5 rounded-xl border border-slate-700">
+              <div>
+                <label class="text-[10px] text-slate-400 block mb-1 font-bold">عدد الكراتين (الافتتاحي)</label>
+                <input id="prod-cartons" type="number" min="0" value="0" oninput="calcProdTotal()" class="w-full bg-slate-950 border border-slate-700 rounded-lg p-2 text-sm text-amber-400 font-bold outline-none text-center">
+              </div>
+              <div>
+                <label class="text-[10px] text-slate-400 block mb-1 font-bold">القطع في الكرتونة الواحدة</label>
+                <input id="prod-pieces-per-carton" type="number" min="1" value="1" oninput="calcProdTotal()" class="w-full bg-slate-950 border border-slate-700 rounded-lg p-2 text-sm text-cyan-400 font-bold outline-none text-center">
+              </div>
+              <div class="col-span-2 text-center text-xs pt-1 border-t border-slate-800 text-slate-300">
+                إجمالي رصيد المخزون الافتتاحي: <span id="prod-total-preview" class="text-emerald-400 font-black text-sm">0</span> قطعة
+              </div>
+            </div>
+
+            <button type="submit" class="md:col-span-3 bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-3 rounded-xl transition shadow-lg shadow-indigo-600/30">
+              حفظ المنتج وتحديث البيانات
+            </button>
+          </form>
+
+          <div class="overflow-x-auto mt-4">
+            <table class="w-full text-right text-sm">
+              <thead class="text-xs text-slate-400 bg-slate-900 border-b border-slate-800">
+                <tr>
+                  <th class="p-3">الصورة</th>
+                  <th class="p-3">الباركود</th>
+                  <th class="p-3">اسم المنتج</th>
+                  <th class="p-3">سعر البيع</th>
+                  <th class="p-3">الرصيد المتاح</th>
+                  <th class="p-3">الحد الأدنى</th>
+                  <th class="p-3 text-center">تعديل / حذف</th>
+                </tr>
+              </thead>
+              <tbody id="owner-products-table" class="divide-y divide-slate-800"></tbody>
+            </table>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- ==================== [2. صفحة الكاشير CASHIER PANEL] ==================== -->
+      <div id="cashier-section" class="hidden space-y-6">
+        <div class="glass-panel p-4 rounded-2xl border border-slate-800 flex flex-wrap justify-between items-center gap-4">
+          <div>
+            <span id="shift-status-tag" class="text-xs px-3 py-1 rounded-full font-black bg-rose-500/20 text-rose-300 border border-rose-500/30">الوردية مغلقة - البيع معطل</span>
+            <p id="shift-time-info" class="text-[11px] text-slate-400 mt-1">يجب بدء الوردية (يحدد السيستم الوقت تلقائياً) لتفعيل البيع ومنع الخروج</p>
+          </div>
+          <div class="flex items-center gap-2">
+            <button id="btn-start-shift" onclick="startShift()" class="bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold px-4 py-2.5 rounded-xl transition">
+              <i class="fa-solid fa-play ml-1"></i> بدء الوردية وتسجيل الحضور
+            </button>
+            <button id="btn-end-shift" onclick="endShiftAndProcess()" class="hidden bg-rose-600 hover:bg-rose-500 text-white text-xs font-bold px-4 py-2.5 rounded-xl transition">
+              <i class="fa-solid fa-file-pdf ml-1"></i> إغلاق الوردية وإرسال تقرير الجرد (PDF)
+            </button>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <div class="lg:col-span-2 space-y-4">
+            <div class="glass-panel p-3 rounded-2xl border border-slate-800 flex items-center gap-3">
+              <div class="flex-1">
+                <label class="text-[10px] font-bold text-slate-400 block mb-1">الباركود للبحث:</label>
+                <input id="pos-barcode-input" type="text" onchange="quickAddByBarcode(this.value)" placeholder="🔍 مسح الباركود..." class="w-full bg-slate-900 border border-slate-700 rounded-xl p-2.5 text-sm outline-none focus:border-indigo-500">
+              </div>
+            </div>
+            <div id="products-grid" class="grid grid-cols-2 sm:grid-cols-3 gap-3 max-h-[550px] overflow-y-auto p-1"></div>
+          </div>
+
+          <div class="glass-panel p-5 rounded-3xl border border-slate-800 flex flex-col justify-between space-y-4">
+            <div>
+              <h3 class="text-sm font-black text-white border-b border-slate-800 pb-3 flex items-center gap-2">
+                <i class="fa-solid fa-receipt text-indigo-400"></i> الفاتورة الحالية (اكتب العدد بالسلة)
+              </h3>
+              <div id="cart-items" class="space-y-3 mt-3 max-h-60 overflow-y-auto">
+                <p class="text-xs text-slate-500 text-center py-8">السلة فارغة، اضغط على المنتج لإضافته</p>
+              </div>
+            </div>
+            <div class="border-t border-slate-800 pt-3 space-y-2">
+              <div class="flex justify-between text-xs font-bold">
+                <span>الإجمالي:</span>
+                <span id="cart-total" class="text-indigo-400 font-black text-base">0 ج.م</span>
+              </div>
+              <button onclick="checkoutCart()" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-black py-3 rounded-xl transition shadow-lg shadow-emerald-600/30 text-sm">
+                <i class="fa-solid fa-check ml-1"></i> إتمام وطباعة البيعة
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ==================== [3. صفحة المحاسب ACCOUNTANT PANEL] ==================== -->
+      <div id="accountant-section" class="hidden space-y-6">
+        <div class="glass-panel p-6 rounded-3xl border border-slate-800 space-y-5">
+          <div class="flex flex-wrap justify-between items-center gap-3 border-b border-slate-800 pb-4">
+            <div>
+              <h3 class="text-lg font-black text-indigo-400 flex items-center gap-2">
+                <i class="fa-solid fa-file-invoice-dollar text-emerald-400"></i> الدفتر المالي والتقارير الرقابية الشاملة
+              </h3>
+              <p class="text-xs text-slate-400 mt-0.5">يعرض حصرياً: سجل المبيعات، الحمولات، الحضور والانصراف، والجرد اليومي</p>
+            </div>
+            <div class="flex gap-2">
+              <button onclick="exportFullReportPDF()" class="bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold px-4 py-2.5 rounded-xl transition flex items-center gap-2 shadow-lg">
+                <i class="fa-solid fa-file-pdf"></i> تصدير التقرير الموحد PDF
+              </button>
+              <button onclick="sendPDFToOwnerWhatsApp()" class="bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold px-4 py-2.5 rounded-xl transition flex items-center gap-2 shadow-lg">
+                <i class="fa-brands fa-whatsapp"></i> إرسال النسخة للأونر
+              </button>
+            </div>
+          </div>
+
+          <div class="flex gap-2 border-b border-slate-800 pb-2 overflow-x-auto text-xs font-bold">
+            <button onclick="switchAccountantTab('all')" id="tab-btn-all" class="bg-indigo-600 text-white px-4 py-2 rounded-xl">📄 التقرير الشامل</button>
+            <button onclick="switchAccountantTab('sales')" id="tab-btn-sales" class="bg-slate-900 text-slate-400 px-4 py-2 rounded-xl">🛍️ فواتير المبيعات</button>
+            <button onclick="switchAccountantTab('shipments')" id="tab-btn-shipments" class="bg-slate-900 text-slate-400 px-4 py-2 rounded-xl">📦 الحمولات والشحنات</button>
+            <button onclick="switchAccountantTab('attendance')" id="tab-btn-attendance" class="bg-slate-900 text-slate-400 px-4 py-2 rounded-xl">🕒 حضور وانصراف الكاشير</button>
+            <button onclick="switchAccountantTab('audits')" id="tab-btn-audits" class="bg-slate-900 text-slate-400 px-4 py-2 rounded-xl">📊 الجرد اليومي والورديات</button>
+          </div>
+
+          <div id="full-export-area" class="p-6 bg-slate-900 rounded-2xl border border-slate-800 space-y-6 text-slate-200"></div>
+        </div>
+      </div>
+
+    </main>
+  </div>
+
+  <script>
+    const defaultData = {
+      ownerWhatsApp: '',
+      users: [
+        { id: 1, username: 'owner', password: '123', role: 'Owner', name: 'المالك' },
+        { id: 2, username: 'cashier1', password: '123', role: 'Cashier', name: 'الكاشير' },
+        { id: 3, username: 'accountant', password: '123', role: 'Accountant', name: 'المحاسب الذكي' }
+      ],
+      products: [
+        { id: 1, barcode: '101', name: 'فراي داي - قمع سوبر فانيليا', sellPrice: 20, stock: 80, minStock: 15, image: 'https://images.unsplash.com/photo-1570197788417-0e82375c9371?w=300' },
+        { id: 2, barcode: '102', name: 'فراي داي - ستيك شوكولاتة', sellPrice: 25, stock: 50, minStock: 10, image: 'https://images.unsplash.com/photo-1563805042-7684c019e1cb?w=300' }
+      ],
+      sales: [],
+      shipments: [],
+      attendance: [],
+      audits: [],
+      currentShift: null
+    };
+
+    let cart = [];
+    let currentAccountantTab = 'all';
+    let currentUser = null;
+
+    function getDB() {
+      const data = localStorage.getItem('friday_db_v14');
+      if (!data) {
+        localStorage.setItem('friday_db_v14', JSON.stringify(defaultData));
+        return defaultData;
+      }
+      return JSON.parse(data);
+    }
+
+    function saveDB(db) {
+      localStorage.setItem('friday_db_v14', JSON.stringify(db));
+    }
+
+    window.addEventListener('DOMContentLoaded', () => {
+      const savedUser = localStorage.getItem('friday_active_user');
+      if (savedUser) {
+        currentUser = JSON.parse(savedUser);
+        document.getElementById('login-screen').classList.add('hidden');
+        document.getElementById('app-screen').classList.remove('hidden');
+        document.getElementById('user-display-name').innerText = currentUser.name;
+        document.getElementById('role-badge').innerText = currentUser.role;
+
+        ['owner-section', 'cashier-section', 'accountant-section'].forEach(id => document.getElementById(id).classList.add('hidden'));
+
+        if (currentUser.role === 'Owner') document.getElementById('owner-section').classList.remove('hidden');
+        else if (currentUser.role === 'Cashier') document.getElementById('cashier-section').classList.remove('hidden');
+        else if (currentUser.role === 'Accountant') document.getElementById('accountant-section').classList.remove('hidden');
+
+        renderAll();
+      }
+    });
+
+    function handleLogin(e) {
+      e.preventDefault();
+      const u = document.getElementById('login-user').value.trim();
+      const p = document.getElementById('login-pass').value.trim();
+      const db = getDB();
+      const user = db.users.find(x => x.username.toLowerCase() === u.toLowerCase() && x.password === p);
+
+      if (!user) return alert('بيانات الدخول غير صحيحة!');
+
+      currentUser = user;
+      localStorage.setItem('friday_active_user', JSON.stringify(currentUser));
+
+      document.getElementById('login-screen').classList.add('hidden');
+      document.getElementById('app-screen').classList.remove('hidden');
+      document.getElementById('user-display-name').innerText = user.name;
+      document.getElementById('role-badge').innerText = user.role;
+
+      ['owner-section', 'cashier-section', 'accountant-section'].forEach(id => document.getElementById(id).classList.add('hidden'));
+
+      if (user.role === 'Owner') document.getElementById('owner-section').classList.remove('hidden');
+      else if (user.role === 'Cashier') document.getElementById('cashier-section').classList.remove('hidden');
+      else if (user.role === 'Accountant') document.getElementById('accountant-section').classList.remove('hidden');
+
+      renderAll();
+    }
+
+    function logout() {
+      const db = getDB();
+      if (currentUser && currentUser.role === 'Cashier' && db.currentShift && db.currentShift.active) {
+        return alert('⚠️ تنبيه أمني: لا يمكنك تسجيل الخروج أو مغادرة الحساب إلا بعد إغلاق الوردية الحالية أولاً!');
+      }
+
+      currentUser = null;
+      localStorage.removeItem('friday_active_user');
+      document.getElementById('app-screen').classList.add('hidden');
+      document.getElementById('login-screen').classList.add('hidden');
+      document.getElementById('login-screen').classList.remove('hidden');
+    }
+
+    function saveOwnerWhatsApp() {
+      const num = document.getElementById('owner-whatsapp-input').value.trim();
+      const db = getDB();
+      db.ownerWhatsApp = num;
+      saveDB(db);
+      alert('تم حفظ رقم واتساب المالك بنجاح!');
+    }
+
+    function sendToWhatsAppWithPDFAlert(reportTitle, pdfElementId) {
+      const db = getDB();
+      const phone = db.ownerWhatsApp;
+      
+      // تصدير PDF تلقائياً
+      const element = document.getElementById(pdfElementId);
+      html2pdf().from(element).save(`${reportTitle.replace(/\s+/g, '_')}.pdf`);
+
+      setTimeout(() => {
+        const text = encodeURIComponent(`📄 تم إصدار وتصدير تقرير (${reportTitle}) بصيغة PDF لمنظومة فراي داي. يرجى مراجعة الملف المرفق.`);
+        if (phone) {
+          window.open(`https://wa.me/${phone}?text=${text}`, '_blank');
+        } else {
+          window.open(`https://wa.me/?text=${text}`, '_blank');
+          alert('تنبيه: لم تقم بتحديد رقم واتساب المالك في إعدادات اللوحة، سيتم فتح واتساب العام.');
+        }
+      }, 1000);
+    }
+
+    function updateUserAccount(e) {
+      e.preventDefault();
+      const db = getDB();
+      const roleTarget = document.getElementById('acc-target-role').value;
+      const newName = document.getElementById('acc-new-name').value.trim();
+      const newPass = document.getElementById('acc-new-pass').value.trim();
+
+      const userObj = db.users.find(u => u.role === roleTarget);
+      if (userObj) {
+        userObj.name = newName;
+        userObj.password = newPass;
+        saveDB(db);
+        if (currentUser && currentUser.role === roleTarget) {
+          currentUser.name = newName;
+          currentUser.password = newPass;
+          localStorage.setItem('friday_active_user', JSON.stringify(currentUser));
+          document.getElementById('user-display-name').innerText = newName;
+        }
+        alert(`تم تحديث الحساب (${roleTarget}) بنجاح!`);
+        e.target.reset();
+        renderAll();
+      }
+    }
+
+    function calcProdTotal() {
+      const cartons = parseInt(document.getElementById('prod-cartons').value) || 0;
+      const pieces = parseInt(document.getElementById('prod-pieces-per-carton').value) || 0;
+      document.getElementById('prod-total-preview').innerText = cartons * pieces;
+    }
+
+    function handleSaveProduct(e) {
+      e.preventDefault();
+      const db = getDB();
+      const editId = document.getElementById('prod-id').value;
+      const barcode = document.getElementById('prod-barcode').value.trim();
+      const name = document.getElementById('prod-name').value.trim();
+      const image = document.getElementById('prod-image').value.trim() || 'https://images.unsplash.com/photo-1563805042-7684c019e1cb?w=300';
+      const sellPrice = parseFloat(document.getElementById('prod-sell').value);
+      const minStock = parseInt(document.getElementById('prod-min-stock').value) || 10;
+      
+      const cartons = parseInt(document.getElementById('prod-cartons').value) || 0;
+      const piecesPerCarton = parseInt(document.getElementById('prod-pieces-per-carton').value) || 1;
+      const totalStockToAdd = cartons * piecesPerCarton;
+
+      if (editId) {
+        const prod = db.products.find(p => p.id == editId);
+        if (prod) {
+          prod.barcode = barcode;
+          prod.name = name;
+          prod.image = image;
+          prod.sellPrice = sellPrice;
+          prod.minStock = minStock;
+          prod.stock += totalStockToAdd;
+        }
+      } else {
+        const existing = db.products.find(p => p.barcode === barcode);
+        if (existing) {
+          existing.stock += totalStockToAdd;
+          existing.name = name;
+          existing.sellPrice = sellPrice;
+          existing.minStock = minStock;
+        } else {
+          db.products.push({ id: Date.now(), barcode, name, sellPrice, stock: totalStockToAdd, minStock, image });
+        }
+      }
+
+      saveDB(db);
+      e.target.reset();
+      document.getElementById('prod-id').value = '';
+      document.getElementById('prod-cartons').value = 0;
+      document.getElementById('prod-pieces-per-carton').value = 1;
+      calcProdTotal();
+      renderAll();
+      alert('تم حفظ المنتج وتحديث المخزون بنجاح!');
+    }
+
+    function deleteProduct(id) {
+      if(!confirm('هل أنت متأكد من حذف هذا المنتج؟')) return;
+      const db = getDB();
+      db.products = db.products.filter(p => p.id !== id);
+      saveDB(db);
+      renderAll();
+    }
+
+    function editProduct(id) {
+      const db = getDB();
+      const prod = db.products.find(p => p.id === id);
+      if (!prod) return;
+
+      document.getElementById('prod-id').value = prod.id;
+      document.getElementById('prod-barcode').value = prod.barcode;
+      document.getElementById('prod-name').value = prod.name;
+      document.getElementById('prod-image').value = prod.image;
+      document.getElementById('prod-sell').value = prod.sellPrice;
+      document.getElementById('prod-min-stock').value = prod.minStock || 10;
+      document.getElementById('prod-cartons').value = 0;
+      document.getElementById('prod-pieces-per-carton').value = 1;
+      calcProdTotal();
+    }
+
+    function submitShipmentMatrix() {
+      const db = getDB();
+      let shipmentDetailsList = [];
+      let updatedCount = 0;
+
+      db.products.forEach(p => {
+        const cInput = document.getElementById(`ship-cartons-${p.id}`);
+        const pInput = document.getElementById(`ship-pieces-${p.id}`);
+        if (cInput && pInput) {
+          const cartons = parseInt(cInput.value) || 0;
+          const piecesPerCarton = parseInt(pInput.value) || 1;
+          if (cartons > 0) {
+            const addedQty = cartons * piecesPerCarton;
+            const oldStock = p.stock;
+            p.stock += addedQty;
+            updatedCount++;
+            
+            shipmentDetailsList.push({
+              productName: p.name,
+              cartons,
+              piecesPerCarton,
+              addedQty,
+              oldStock,
+              newStock: p.stock
+            });
+          }
+        }
+      });
+
+      if (updatedCount === 0) return alert('الرجاء إدخال عدد كراتين لشحنة واحدة على الأقل!');
+
+      db.shipments.push({
+        id: Date.now(),
+        date: new Date().toLocaleString('ar-EG'),
+        details: shipmentDetailsList
+      });
+
+      saveDB(db);
+      renderAll();
+
+      // تصدير PDF وإرسال إشعار للأونر
+      sendToWhatsAppWithPDFAlert('تقرير_شحنة_جديدة', 'full-export-area');
+      alert('تم اعتماد الشحنة وتصدير ملف الـ PDF وإرساله للأونر بنجاح!');
+    }
+
+    function startShift() {
+      const db = getDB();
+      if (db.currentShift && db.currentShift.active) return alert('الوردية قائمة بالفعل!');
+
+      const nowTimeStr = new Date().toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' });
+      const startTimeFormatted = `${new Date().toLocaleDateString('ar-EG')} - الساعة ${nowTimeStr}`;
+      const initialStock = {};
+      db.products.forEach(p => initialStock[p.id] = p.stock);
+
+      db.currentShift = { active: true, startTime: startTimeFormatted, cashier: currentUser.name, initialStock };
+      db.attendance.push({ id: Date.now(), cashier: currentUser.name, startTime: startTimeFormatted, endTime: 'قائمة الآن...', status: 'حاضر' });
+
+      saveDB(db);
+      renderAll();
+      alert(`تم بدء الوردية تلقائياً في تمام الساعة ${nowTimeStr}!`);
+    }
+
+    function endShiftAndProcess() {
+      const db = getDB();
+      if (!db.currentShift || !db.currentShift.active) return;
+
+      const shift = db.currentShift;
+      const endTime = new Date().toLocaleString('ar-EG');
+      const att = db.attendance.reverse().find(a => a.cashier === shift.cashier && a.endTime === 'قائمة الآن...');
+      if (att) att.endTime = endTime;
+
+      let auditReport = `🧾 إغلاق الوردية والجرد اليومي - فراي داي\nالكاشير: ${shift.cashier}\nوقت البدء: ${shift.startTime}\nوقت الإغلاق: ${endTime}\n-------------------\n`;
+      db.products.forEach(p => {
+        const start = shift.initialStock[p.id] || 0;
+        const sold = start - p.stock;
+        auditReport += `• ${p.name}: بداية (${start}) | متبقي (${p.stock}) | مباع (${sold})\n`;
+      });
+
+      db.audits.push({ id: Date.now(), cashier: shift.cashier, startTime: shift.startTime, endTime: endTime, details: auditReport });
+      db.currentShift.active = false;
+      saveDB(db);
+
+      sendToWhatsAppWithPDFAlert('تقرير_إغلاق_الوردية', 'full-export-area');
+      renderAll();
+      alert('تم إغلاق الوردية وتصدير تقرير الجرد PDF وإرساله للأونر بنجاح.');
+    }
+
+    function addToCart(prodId) {
+      const db = getDB();
+      if (!db.currentShift || !db.currentShift.active) return alert('يمنع البيع قبل بدء الوردية!');
+
+      const prod = db.products.find(p => p.id === prodId);
+      if (!prod || prod.stock <= 0) return alert('المنتج نفد من المخزن!');
+
+      const item = cart.find(c => c.prodId === prodId);
+      if (item) {
+        if (item.qty + 1 > prod.stock) return alert('الكمية المطلوبة تتجاوز المخزون المتاح!');
+        item.qty += 1;
+      } else {
+        cart.push({ prodId: prod.id, name: prod.name, price: prod.sellPrice, qty: 1 });
+      }
+
+      renderCart();
+    }
+
+    function updateCartItemQty(prodId, newQty) {
+      const db = getDB();
+      const prod = db.products.find(p => p.id === prodId);
+      const item = cart.find(c => c.prodId === prodId);
+      
+      const qty = parseInt(newQty) || 1;
+      if (prod && qty > prod.stock) {
+        alert('الكمية المدخلة تتجاوز المخزون المتاح!');
+        item.qty = prod.stock;
+      } else if (qty < 1) {
+        item.qty = 1;
+      } else {
+        item.qty = qty;
+      }
+      renderCart();
+    }
+
+    function quickAddByBarcode(code) {
+      const db = getDB();
+      const prod = db.products.find(p => p.barcode === code.trim());
+      if (prod) {
+        addToCart(prod.id);
+        document.getElementById('pos-barcode-input').value = '';
+      }
+    }
+
+    function renderCart() {
+      const el = document.getElementById('cart-items');
+      if (cart.length === 0) {
+        el.innerHTML = `<p class="text-xs text-slate-500 text-center py-8">السلة فارغة، اضغط على المنتج لإضافته</p>`;
+        document.getElementById('cart-total').innerText = '0 ج.م';
+        return;
+      }
+
+      let total = 0;
+      el.innerHTML = cart.map((item, idx) => {
+        const itemTotal = item.price * item.qty;
+        total += itemTotal;
+        return `
+          <div class="bg-slate-900 p-2.5 rounded-xl border border-slate-800 text-xs space-y-2">
+            <div class="flex justify-between items-center">
+              <span class="font-bold text-slate-200">${item.name}</span>
+              <button onclick="cart.splice(${idx},1); renderCart();" class="text-rose-400 p-1"><i class="fa-solid fa-trash"></i></button>
+            </div>
+            <div class="flex justify-between items-center pt-1 border-t border-slate-800">
+              <div class="flex items-center gap-1.5">
+                <span class="text-slate-400">العدد:</span>
+                <input type="number" min="1" value="${item.qty}" onchange="updateCartItemQty(${item.prodId}, this.value)" class="w-16 bg-slate-950 border border-amber-500/50 rounded-lg p-1 text-center font-black text-amber-400 text-sm outline-none">
+              </div>
+              <span class="font-black text-emerald-400">${itemTotal} ج.م</span>
+            </div>
+          </div>
+        `;
+      }).join('');
+      document.getElementById('cart-total').innerText = total + ' ج.م';
+    }
+
+    function checkoutCart() {
+      const db = getDB();
+      if (!db.currentShift || !db.currentShift.active) return alert('الوردية مغلقة!');
+      if (cart.length === 0) return alert('السلة فارغة!');
+
+      let lowStockAlerts = [];
+
+      cart.forEach(item => {
+        const prod = db.products.find(p => p.id === item.prodId);
+        if (prod) {
+          prod.stock -= item.qty;
+          // التحقق من الحد الأدنى
+          const minLimit = prod.minStock !== undefined ? prod.minStock : 10;
+          if (prod.stock <= minLimit) {
+            lowStockAlerts.push(`⚠️ تنبيه مخزون منخفض:\nالمنتج: ${prod.name}\nالرصيد الحالي وصل إلى: ${prod.stock} قطعة (الحد الأدنى: ${minLimit})`);
+          }
+        }
+      });
+
+      const totalAmount = cart.reduce((a, b) => a + (b.price * b.qty), 0);
+      db.sales.push({
+        id: Math.floor(Math.random() * 90000) + 10000,
+        items: [...cart],
+        total: totalAmount,
+        cashier: currentUser.name,
+        date: new Date().toLocaleString('ar-EG')
+      });
+
+      saveDB(db);
+      cart = [];
+      renderCart();
+      renderAll();
+
+      // إرسال تنبيهات الحد الأدنى للأونر عبر واتساب تلقائياً إن وجدت
+      if (lowStockAlerts.length > 0) {
+        const alertMsg = encodeURIComponent(lowStockAlerts.join('\n\n'));
+        const phone = db.ownerWhatsApp;
+        if (phone) {
+          window.open(`https://wa.me/${phone}?text=${alertMsg}`, '_blank');
+        } else {
+          window.open(`https://wa.me/?text=${alertMsg}`, '_blank');
+        }
+        alert('تم إتمام البيع، ونظراً لوصول بعض المنتجات للحد الأدنى، قام النظام بإرسال تحذير فوري للأونر!');
+      } else {
+        alert('تم إتمام البيع بنجاح!');
+      }
+    }
+
+    function switchAccountantTab(tab) {
+      currentAccountantTab = tab;
+      ['all', 'sales', 'shipments', 'attendance', 'audits'].forEach(t => {
+        const btn = document.getElementById(`tab-btn-${t}`);
+        if (btn) btn.className = (t === tab) ? 'bg-indigo-600 text-white px-4 py-2 rounded-xl' : 'bg-slate-900 text-slate-400 px-4 py-2 rounded-xl';
+      });
+      renderAccountantContent();
+    }
+
+    function renderAccountantContent() {
+      const db = getDB();
+      const el = document.getElementById('full-export-area');
+      if (!el) return;
+
+      let contentHTML = `<div class="space-y-6 text-xs">`;
+
+      if (currentAccountantTab === 'all' || currentAccountantTab === 'sales') {
+        contentHTML += `
+          <div>
+            <h3 class="font-bold text-emerald-400 mb-2">🛍️ سجل فواتير المبيعات (${db.sales.length})</h3>
+            <table class="w-full text-right border border-slate-800">
+              <tr class="bg-slate-800"><th class="p-2">رقم الفاتورة</th><th class="p-2">الكاشير</th><th class="p-2">الإجمالي</th><th class="p-2">التاريخ والوقت</th></tr>
+              ${db.sales.length === 0 ? `<tr><td colspan="4" class="p-3 text-center text-slate-500">لا توجد مبيعات مسجلة</td></tr>` : 
+                db.sales.map(s => `<tr><td class="p-2">#${s.id}</td><td class="p-2">${s.cashier}</td><td class="p-2 text-emerald-400 font-bold">${s.total} ج.م</td><td class="p-2">${s.date}</td></tr>`).join('')}
+            </table>
+          </div>
+        `;
+      }
+
+      if (currentAccountantTab === 'all' || currentAccountantTab === 'shipments') {
+        contentHTML += `
+          <div class="mt-4">
+            <h3 class="font-bold text-indigo-400 mb-2">📦 سجل الحمولات والشحنات الواردة (${db.shipments.length})</h3>
+            <div class="space-y-3">
+              ${db.shipments.length === 0 ? `<p class="text-slate-500 text-center py-2">لا توجد شحنات مسجلة</p>` :
+                db.shipments.map(sh => `
+                  <div class="bg-slate-950 p-3 rounded-xl border border-slate-800 space-y-1">
+                    <p class="text-amber-400 font-bold">تاريخ الشحنة: ${sh.date}</p>
+                    <ul class="list-disc list-inside space-y-0.5 text-slate-300">
+                      ${sh.details.map(d => `<li>المنتج: <b>${d.productName}</b> | الكراتين: ${d.cartons} (× ${d.piecesPerCarton}) = <b class="text-emerald-400">+${d.addedQty} قطعة</b> | المخزن الجديد: <b>${d.newStock}</b></li>`).join('')}
+                    </ul>
+                  </div>
+                `).join('')}
+            </div>
+          </div>
+        `;
+      }
+
+      if (currentAccountantTab === 'all' || currentAccountantTab === 'attendance') {
+        contentHTML += `
+          <div class="mt-4">
+            <h3 class="font-bold text-cyan-400 mb-2">🕒 سجل حضور وانصراف الكاشير (${db.attendance.length})</h3>
+            <table class="w-full text-right border border-slate-800">
+              <tr class="bg-slate-800"><th class="p-2">الكاشير</th><th class="p-2">وقت الحضور والبداية</th><th class="p-2">وقت الانصراف والإغلاق</th><th class="p-2">الحالة</th></tr>
+              ${db.attendance.length === 0 ? `<tr><td colspan="4" class="p-3 text-center text-slate-500">لا توجد سجلات حضور</td></tr>` :
+                db.attendance.map(a => `<tr><td class="p-2 font-bold">${a.cashier}</td><td class="p-2">${a.startTime}</td><td class="p-2">${a.endTime}</td><td class="p-2 text-emerald-400">${a.status}</td></tr>`).join('')}
+            </table>
+          </div>
+        `;
+      }
+
+      if (currentAccountantTab === 'all' || currentAccountantTab === 'audits') {
+        contentHTML += `
+          <div class="mt-4">
+            <h3 class="font-bold text-amber-400 mb-2">📊 تقارير الجرد اليومي والورديات (${db.audits.length})</h3>
+            <div class="space-y-3">
+              ${db.audits.length === 0 ? `<p class="text-slate-500 text-center py-2">لا توجد تقارير جرد مسجلة للورديات المنتهية</p>` :
+                db.audits.map(ad => `
+                  <div class="bg-slate-950 p-3 rounded-xl border border-slate-800 whitespace-pre-line text-slate-300">
+                    <p class="font-bold text-indigo-400 mb-1">وردية الكاشير: ${ad.cashier} (${ad.startTime} إلى ${ad.endTime})</p>${ad.details}
+                  </div>
+                `).join('')}
+            </div>
+          </div>
+        `;
+      }
+
+      contentHTML += `</div>`;
+      el.innerHTML = contentHTML;
+    }
+
+    function exportFullReportPDF() {
+      const element = document.getElementById('full-export-area');
+      html2pdf().from(element).save('Friday_IceCream_Financial_Report.pdf');
+    }
+
+    function sendPDFToOwnerWhatsApp() {
+      sendToWhatsAppWithPDFAlert('التقرير_المالي_الشامل', 'full-export-area');
+    }
+
+    function renderAll() {
+      const db = getDB();
+
+      const waInput = document.getElementById('owner-whatsapp-input');
+      if (waInput) waInput.value = db.ownerWhatsApp || '';
+
+      let totalSales = db.sales.reduce((a, b) => a + b.total, 0);
+      let totalSoldItems = db.sales.reduce((sum, s) => sum + s.items.reduce((acc, i) => acc + i.qty, 0), 0);
+      
+      const salesEl = document.getElementById('stat-sales');
+      if (salesEl) salesEl.innerText = totalSales + ' ج.م';
+      const soldEl = document.getElementById('stat-sold-items');
+      if (soldEl) soldEl.innerText = totalSoldItems + ' قطعة';
+
+      const matrixTable = document.getElementById('shipment-matrix-table');
+      if (matrixTable) {
+        matrixTable.innerHTML = db.products.map(p => `
+          <tr>
+            <td class="p-3 flex items-center gap-2">
+              <img src="${p.image}" class="w-8 h-8 object-cover rounded-lg">
+              <span class="font-bold">${p.name}</span>
+            </td>
+            <td class="p-3 text-indigo-400 font-bold">${p.stock} قطعة</td>
+            <td class="p-3">
+              <input id="ship-cartons-${p.id}" type="number" min="0" value="0" placeholder="عدد الكراتين" class="w-28 bg-slate-900 border border-slate-700 rounded-lg p-2 text-center text-amber-400 font-bold outline-none">
+            </td>
+            <td class="p-3">
+              <input id="ship-pieces-${p.id}" type="number" min="1" value="18" placeholder="القطع في الكرتونة" class="w-28 bg-slate-900 border border-slate-700 rounded-lg p-2 text-center text-cyan-400 font-bold outline-none">
+            </td>
+            <td class="p-3 text-slate-400 text-xs">تضرب تلقائياً عند الاعتماد</td>
+          </tr>
+        `).join('');
+      }
+
+      const prodTable = document.getElementById('owner-products-table');
+      if (prodTable) {
+        prodTable.innerHTML = db.products.map(p => `
+          <tr>
+            <td class="p-3"><img src="${p.image}" class="w-10 h-10 object-cover rounded-lg"></td>
+            <td class="p-3">${p.barcode}</td>
+            <td class="p-3">${p.name}</td>
+            <td class="p-3 text-indigo-400 font-bold">${p.sellPrice} ج.م</td>
+            <td class="p-3 font-black ${p.stock <= (p.minStock || 10) ? 'text-rose-400' : 'text-emerald-400'}">${p.stock}</td>
+            <td class="p-3 text-amber-400 font-bold">${p.minStock || 10}</td>
+            <td class="p-3 text-center space-x-2 space-x-reverse">
+              <button onclick="editProduct(${p.id})" class="bg-amber-600/20 text-amber-400 hover:bg-amber-600 hover:text-white px-2.5 py-1 rounded-lg text-xs transition">تعديل</button>
+              <button onclick="deleteProduct(${p.id})" class="bg-rose-600/20 text-rose-400 hover:bg-rose-600 hover:text-white px-2.5 py-1 rounded-lg text-xs transition">حذف</button>
+            </td>
+          </tr>
+        `).join('');
+      }
+
+      const pGrid = document.getElementById('products-grid');
+      if (pGrid) {
+        pGrid.innerHTML = db.products.map(p => `
+          <div onclick="addToCart(${p.id})" class="glass-panel p-3 rounded-2xl border border-slate-800 cursor-pointer hover:border-indigo-500 transition text-center space-y-2">
+            <img src="${p.image}" class="w-full h-24 object-cover rounded-xl">
+            <h4 class="font-bold text-xs truncate">${p.name}</h4>
+            <div class="flex justify-between items-center text-xs">
+              <span class="text-indigo-400 font-black">${p.sellPrice} ج.م</span>
+              <span class="${p.stock <= (p.minStock || 10) ? 'text-rose-400 font-bold' : 'text-slate-400'}">مخزن: ${p.stock}</span>
+            </div>
+          </div>
+        `).join('');
+      }
+
+      const shiftTag = document.getElementById('shift-status-tag');
+      const startBtn = document.getElementById('btn-start-shift');
+      const endBtn = document.getElementById('btn-end-shift');
+      
+      if (shiftTag && startBtn && endBtn) {
+        if (db.currentShift && db.currentShift.active) {
+          shiftTag.className = "text-xs px-3 py-1 rounded-full font-black bg-emerald-500/20 text-emerald-300 border border-emerald-500/30";
+          shiftTag.innerText = `الوردية نشطة (بواسطة: ${db.currentShift.cashier}) - ابدأ الساعة: ${db.currentShift.startTime}`;
+          startBtn.classList.add('hidden');
+          endBtn.classList.remove('hidden');
+        } else {
+          shiftTag.className = "text-xs px-3 py-1 rounded-full font-black bg-rose-500/20 text-rose-300 border border-rose-500/30";
+          shiftTag.innerText = "الوردية مغلقة - البيع معطل";
+          startBtn.classList.remove('hidden');
+          endBtn.classList.add('hidden');
+        }
+      }
+
+      renderAccountantContent();
+    }
+  </script>
+</body>
+</html>
